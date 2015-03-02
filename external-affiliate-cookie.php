@@ -84,12 +84,11 @@ class external_affiliate_cookie {
 		}
 
 		// Replace specific url's with added query arg
-		preg_replace_callback( '/href="(.*?)"/g', function ( $matches ) {
+		preg_replace_callback( '/href="(.*?realbigplugins.com)(.*?)"/g', function ( $matches ) {
 
 			// Get the url and bail if it's not set
-			if ( ( $url = isset( $matches[1] ) ? $matches[1] : false ) === false ) {
-				return $matches[0];
-			}
+			$uri = isset( $matches[2] ) && ! empty( $matches[2] ) ? $matches[2] : false;
+			$url = $uri ? $matches[1] + $uri : $matches[1];
 
 			$total_match = $matches[0];
 
