@@ -22,22 +22,29 @@ class external_affiliate_cookie {
 	 *
 	 * @var string
 	 */
-	private static $cookie_name = 'rbp_refer';
+	public static $cookie_name = 'rbp_refer';
 
 	/**
 	 * Initialize all the things
 	 */
 	public function __construct() {
 
+		if ( ! isset( $_GET['debug']))
+			return;
+
 		add_action( 'init', array( __CLASS__, 'set' ) );
 		add_shortcode( 'cookie', array( __CLASS__, 'output' ) );
 
+		// Filter content
 		add_filter( 'the_content', array( __CLASS__, '_add_query_arg' ) );
+		add_filter( 'the_excerpt', array( __CLASS__, '_add_query_arg' ) );
+		add_filter( 'the_comments', array( __CLASS__, '_add_query_arg' ) );
+		add_filter( 'render_content', array( __CLASS__, '_add_query_arg' ) );
 	}
-	
+
 	/**
-	* set
-	*/
+	 * set
+	 */
 	public static function set() {
 
 		if ( isset( $_GET['ref'] ) ) {
@@ -84,11 +91,12 @@ class external_affiliate_cookie {
 		}
 
 		// Replace specific url's with added query arg
-		preg_replace_callback( '/href="(.*?realbigplugins.com)(.*?)"/g', function ( $matches ) {
+		$content = preg_replace_callback( '/href="(.*?realbigplugins.com.*?)"/', function ( $matches ) {
 
 			// Get the url and bail if it's not set
-			$uri = isset( $matches[2] ) && ! empty( $matches[2] ) ? $matches[2] : false;
-			$url = $uri ? $matches[1] + $uri : $matches[1];
+			if ( ( $url = isset( $matches[1] ) && ! empty( $matches[1] ) ? $matches[1] : false ) === false ) {
+				return $matches[0];
+			}
 
 			$total_match = $matches[0];
 
@@ -96,7 +104,7 @@ class external_affiliate_cookie {
 			$new_url = add_query_arg( 'ref', external_affiliate_cookie::$cookie_name, $url );
 
 			// Add the url back in
-			$total_match = preg_replace( "/$url/", $new_url, $total_match );
+			$total_match = preg_replace('/' . preg_quote( $url, '/' ) . '/', $new_url, $total_match);
 
 			return $total_match;
 		}, $content );
